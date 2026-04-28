@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>お子さんの学習診断｜総合学習教室ブリッジ</title>
+<meta name="description" content="8つの質問に答えるだけで、お子さんの「伸びしろ」が見えてきます。匿名OK・登録不要・約2分で完了。滋賀県彦根市の総合学習教室ブリッジ。">
+<meta property="og:title" content="お子さんの学習、本当に大丈夫ですか？｜ブリッジ学習診断">
+<meta property="og:description" content="たった8問・約2分の診断で、お子さんの「伸びしろ」が見えてきます。匿名OK・登録不要。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rikimat.github.io/bridge-quiz/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP','Hiragino Sans',sans-serif;background:#FAFAF7;color:#1a1a1a;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+a{color:inherit}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const QUIZZES = {
+  elementary: {
+    id: "elementary",
+    title: "学びの土台診断",
+    subtitle: "お子さんの「伸びしろ」が見える8つの質問",
+    target: "小学生・中学生の保護者向け",
+    time: "約2分",
+    questions: [
+      {
+        q: "お子さんは「今日はこれをやる」と自分で決めて勉強を始められますか？",
+        options: [
+          { text: "ほぼ毎日、自分で決めて取りかかれる", score: 3 },
+          { text: "声をかければ動ける", score: 2 },
+          { text: "親が段取りしないと始まらない", score: 1 },
+          { text: "言っても「あとで」が口ぐせ", score: 0 },
+        ],
+      },
+      {
+        q: "文章を読んだあと「要するにどういう話？」と聞くと、自分の言葉でまとめられますか？",
+        options: [
+          { text: "要点を整理して説明できる", score: 3 },
+          { text: "なんとなくは言えるが曖昧になる", score: 2 },
+          { text: "本文の一部をそのまま読み上げる", score: 1 },
+          { text: "「わからん」「忘れた」で終わる", score: 0 },
+        ],
+      },
+      {
+        q: "買い物のおつりや時間の計算など、日常で暗算を使えていますか？",
+        options: [
+          { text: "自然に暗算でパッと答える", score: 3 },
+          { text: "簡単な計算ならできる", score: 2 },
+          { text: "電卓やスマホに頼ることが多い", score: 1 },
+          { text: "計算すること自体を避ける", score: 0 },
+        ],
+      },
+      {
+        q: "ノートや提出物の字は、丁寧に書けていますか？",
+        options: [
+          { text: "いつも読みやすく整っている", score: 3 },
+          { text: "意識すれば丁寧に書ける", score: 2 },
+          { text: "急ぐと雑になりがち", score: 1 },
+          { text: "本人も読めない字を書くことがある", score: 0 },
+        ],
+      },
+      {
+        q: "テストで間違えた問題に対して、お子さんはどう対応していますか？",
+        options: [
+          { text: "なぜ間違えたか確認し、解き直す", score: 3 },
+          { text: "答えを見て「ふーん」で終わる", score: 2 },
+          { text: "間違いを見ること自体を嫌がる", score: 1 },
+          { text: "返却後は見もしない", score: 0 },
+        ],
+      },
+      {
+        q: "お子さんの将来の進路について、ご家庭ではどんな状態ですか？",
+        options: [
+          { text: "「絶対この学校に行きたい！」と本人が燃えている", score: 3 },
+          { text: "なんとなく「いい学校に行けたらいいな」と思っている", score: 2 },
+          { text: "親は考えているが、本人は無関心", score: 1 },
+          { text: "まだ先のことだし、特に考えていない", score: 0 },
+        ],
+      },
+      {
+        q: "塾や習い事がない日、お子さんはどう過ごしていますか？",
+        options: [
+          { text: "勉強と遊びを自分で区切って過ごせる", score: 3 },
+          { text: "声をかければメリハリがつく", score: 2 },
+          { text: "ゲームや動画でほぼ1日が終わる", score: 1 },
+          { text: "何もせず「ヒマ」と言っている", score: 0 },
+        ],
+      },
+      {
+        q: "今、お子さんの学習で一番困っていることはどれですか？",
+        options: [
+          { text: "大きな悩みはないが、さらに上を目指したい", score: 3 },
+          { text: "勉強しているのに成果が出ない", score: 2 },
+          { text: "そもそも机に向かう習慣がない", score: 1 },
+          { text: "何をどうしたらいいかわからない", score: 0 },
+        ],
+      },
+    ],
+    results: [
+      {
+        min: 20, max: 24, type: "自走型", emoji: "🚀",
+        headline: "お子さんの「学びの土台」は\nしっかりしています",
+        body: "自分で考え、自分で動ける力がすでに育っています。\n\nこのタイプのお子さんは、環境次第でさらに大きく伸びます。「絶対あの学校に行きたい！」という目標があるなら、その炎を絶やさない場所が必要です。",
+        bridge: "ブリッジは「固定の授業がない塾」。自分で時間と教科を決めるスタイルだからこそ、自走型のお子さんの力を最大限に引き出します。中学受験・検定挑戦にも、自分のペースで取り組めます。",
+        recommend: ["国語（読解・記述の応用力強化）", "算数（思考力・検定チャレンジ）"],
+      },
+      {
+        min: 13, max: 19, type: "あと一歩型", emoji: "🌱",
+        headline: "「やればできる」の芽は\n確実に育っています",
+        body: "力はあるのに、やり方や環境がまだフィットしていない状態。多くのお子さんがここにいます。\n\n「いい学校に行きたい」気持ちはある。でも、それを行動に変える「型」がまだできていない——そんな印象です。",
+        bridge: "ブリッジでは上から教え込むのではなく「自分で考えて動ける力」を育てます。そろばんで数感覚を鍛え、国語で「解答力」を身につける。お子さんの伸びしろに合わせたコースが見つかります。",
+        recommend: ["ブリッジ総合（自学自習力の育成）", "そろばん（計算力・集中力UP）", "国語（読解の土台づくり）"],
+      },
+      {
+        min: 6, max: 12, type: "きっかけ待ち型", emoji: "🔑",
+        headline: "「きっかけ」さえあれば\n変われるタイプです",
+        body: "今は学びへの意欲が低く見えるかもしれません。\n\nでもそれは「能力がない」のではなく「火のつけ方を知らない」だけ。進路への関心が薄いのも、自分が「できる」と思えていないからです。",
+        bridge: "ブリッジの代表・田中は自身が元・学年最下位の劣等生。だからこそ「やる気が出ない子」の気持ちがわかります。書道で丁寧に取り組む力を育てたり、そろばんで小さな成功体験を積んだり。まず1つ、好きになれるものを見つけにきてください。",
+        recommend: ["書道（集中力・丁寧さの土台）", "そろばん（成功体験を積む）", "ブリッジ総合（自己管理力の育成）"],
+      },
+      {
+        min: 0, max: 5, type: "土台づくり型", emoji: "🏗️",
+        headline: "今がちょうど\n「変わるタイミング」です",
+        body: "正直に申し上げます。このままだと、学年が上がるほど差が広がる可能性があります。\n\nでも大丈夫。ブリッジに来る子の多くが最初はこの状態です。",
+        bridge: "「勉強が苦手な子たちのためにいるのが僕たちです」——これがブリッジの信念。宿題はありません。まず「塾に来ること」から始めて、少しずつ自分で動ける力を育てていきます。",
+        recommend: ["ブリッジ総合（まずは通う習慣から）", "書道（心を落ち着ける練習に）", "算数（スモールステップで自信をつける）"],
+      },
+    ],
+  },
+  highschool: {
+    id: "highschool",
+    title: "高校受験 準備力診断",
+    subtitle: "受験対策の「質」を見える化する8つの質問",
+    target: "中学生の保護者向け",
+    time: "約2分",
+    questions: [
+      {
+        q: "定期テストの準備は、いつ頃から始めていますか？",
+        options: [
+          { text: "2週間前にはテスト範囲を確認して動いている", score: 3 },
+          { text: "1週間前くらいから焦り始める", score: 2 },
+          { text: "前日〜当日に詰め込むことが多い", score: 1 },
+          { text: "テスト期間中も普段と変わらない", score: 0 },
+        ],
+      },
+      {
+        q: "テスト勉強のとき、何に一番時間を使っていますか？",
+        options: [
+          { text: "問題を解いて、間違えた箇所を解き直す", score: 3 },
+          { text: "ワークは解くが、答え合わせで終わる", score: 2 },
+          { text: "教科書やノートを「見ている」時間が大半", score: 1 },
+          { text: "何をすればいいかわからず時間だけ過ぎる", score: 0 },
+        ],
+      },
+      {
+        q: "国語の記述問題（「理由を書け」「考えを述べよ」など）に、自分の言葉で答えられていますか？",
+        options: [
+          { text: "設問の意図を読み取り、的確に書ける", score: 3 },
+          { text: "部分点は取れるが、完答は少ない", score: 2 },
+          { text: "空欄か、本文をそのまま写している", score: 1 },
+          { text: "記述問題はほぼ白紙で提出する", score: 0 },
+        ],
+      },
+      {
+        q: "志望校について、お子さん本人はどんな状態ですか？",
+        options: [
+          { text: "「絶対この高校に行く！」と自分で決めて燃えている", score: 3 },
+          { text: "「あの高校がいいかな」となんとなく思っている", score: 2 },
+          { text: "親が勧めた学校をそのまま志望している", score: 1 },
+          { text: "「どこでもいい」「考えたくない」と言う", score: 0 },
+        ],
+      },
+      {
+        q: "塾や学校で教わったことを、家に帰ってから自分で復習していますか？",
+        options: [
+          { text: "その日のうちにもう一度解き直す", score: 3 },
+          { text: "テスト前にまとめて見返す程度", score: 2 },
+          { text: "「塾で解いた＝できた」と思っている", score: 1 },
+          { text: "「塾でやったから大丈夫」と言い家では何もしない", score: 0 },
+        ],
+      },
+      {
+        q: "内申点（通知表の評定）について、お子さんは現状を把握していますか？",
+        options: [
+          { text: "志望校に必要な内申点と現状の差を理解している", score: 3 },
+          { text: "通知表の数字は気にするが、具体的な計算はしていない", score: 2 },
+          { text: "テストの点数しか気にしていない", score: 1 },
+          { text: "内申点の仕組み自体をわかっていない", score: 0 },
+        ],
+      },
+      {
+        q: "勉強の時間と、スマホ・ゲーム・動画の時間のバランスは取れていますか？",
+        options: [
+          { text: "自分でルールを決めて守れている", score: 3 },
+          { text: "親が管理すれば守れる", score: 2 },
+          { text: "ルールはあるが守れていない", score: 1 },
+          { text: "ほぼスマホ・ゲーム・動画で埋まっている", score: 0 },
+        ],
+      },
+      {
+        q: "模試や実力テストの結果が返ってきたとき、お子さんの反応はどれに近いですか？",
+        options: [
+          { text: "間違えた問題をチェックし、次に活かそうとする", score: 3 },
+          { text: "偏差値や順位を気にするが、復習はしない", score: 2 },
+          { text: "一喜一憂するだけで終わる", score: 1 },
+          { text: "結果を見ようともしない", score: 0 },
+        ],
+      },
+    ],
+    results: [
+      {
+        min: 20, max: 24, type: "自走型受験生", emoji: "🎯",
+        headline: "受験の「型」ができています。\nあとは密度を上げるだけ。",
+        body: "自分で動ける力がすでにあります。「絶対この高校に行く！」という強い意志もある。このタイプに必要なのは「教えてくれる先生」ではなく「自走を加速させる環境」です。",
+        bridge: "ブリッジは固定の授業がありません。自分で教科と時間を選び、必要なときだけ講師に質問する。V模試で偏差値65以上、定期テスト400点超えの先輩たちも、この自走スタイルで結果を出しました。",
+        recommend: ["ブリッジ総合（自走の環境）", "国語（記述・論述の応用力強化）"],
+      },
+      {
+        min: 13, max: 19, type: "方向修正型", emoji: "🔧",
+        headline: "努力はしている。\n「やり方」を変えれば結果が変わります。",
+        body: "「勉強してるのに上がらない」——そう感じていませんか？ それは才能の問題ではなく、学習の「密度」の問題です。内申点の半分は1学期で決まります。",
+        bridge: "ブリッジでは「勉強ごっこ」を卒業させます。教科書を眺める時間を、問題を解いて間違いを潰す時間に変える。国語の「解答力」を鍛えれば、他教科の記述でも点が伸びます。動くなら今です。",
+        recommend: ["ブリッジ総合（学習密度の改善）", "国語（5つの力で全教科UP）"],
+      },
+      {
+        min: 6, max: 12, type: "緊急改善型", emoji: "⚡",
+        headline: "厳しいことを言います。\n今のままでは間に合いません。",
+        body: "でもこれだけは覚えておいてください。\n「失敗で終わるから失敗になる。続けていけば成功になる。」",
+        bridge: "ブリッジの代表・田中は元・学年最下位の劣等生。だからこそ「やり方がわからない子」の気持ちがわかります。まず必要なのは「塾で教えてもらう」ことではなく「自分で勉強できるようになる」こと。来る時間も教科も自分で決める。その選択の積み重ねが、受験本番の自信になります。",
+        recommend: ["ブリッジ総合（自学自習力＋自己管理力）", "国語（全教科の土台を立て直す）"],
+      },
+      {
+        min: 0, max: 5, type: "土台再構築型", emoji: "🏗️",
+        headline: "受験の前に、\nもっと大切なことがあります。",
+        body: "点数を上げる前に、まず「自分で動ける力」を育てる必要があります。\n\nブリッジは受験を「目的」ではなく「手段」として捉えています。",
+        bridge: "勉強を通じて自己管理能力を高め、自分の人生を自分で選べる人になること。それがブリッジの本当の目標です。宿題はありません。まず塾に来ること。自分で「今日はこれをやる」と決めること。そこからすべてが始まります。",
+        recommend: ["ブリッジ総合（通う習慣＋自分で決める力）"],
+      },
+    ],
+  },
+};
+
+const CTA_URL = "https://bridge-inae.hp.peraichi.com/#section-15";
+const SITE_URL = "https://bridge-inae.hp.peraichi.com";
+
+const P = {
+  bg: "#FAFAF7", card: "#FFFFFF", text: "#1a1a1a",
+  sub: "#6B6560", muted: "#A09A94", accent: "#C17A3A",
+  accentLight: "#FFF5EC", border: "#E8E4DE", borderLight: "#F0ECE6",
+};
+
+function ProgressBar({ current, total }) {
+  const pct = ((current + 1) / total) * 100;
+  return (
+    <div style={{ padding: "0 24px", marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: P.muted, marginBottom: 6 }}>
+        <span>Q{current + 1} / {total}</span><span>{Math.round(pct)}%</span>
+      </div>
+      <div style={{ height: 4, borderRadius: 2, background: P.borderLight, overflow: "hidden" }}>
+        <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, " + P.accent + ", #D4944E)", width: pct + "%", transition: "width 0.4s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+function QuizSelector({ onSelect }) {
+  return (
+    <div style={{ minHeight: "100dvh", background: P.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
+      <div style={{ fontSize: 11, letterSpacing: 3, color: P.accent, marginBottom: 12, fontWeight: 600 }}>総合学習教室ブリッジ</div>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: P.text, marginBottom: 8, textAlign: "center", lineHeight: 1.6 }}>お子さんの学習、<br/>本当に大丈夫ですか？</h1>
+      <p style={{ fontSize: 13, color: P.sub, marginBottom: 12, textAlign: "center", lineHeight: 1.8 }}>たった8問・約2分の診断で<br/>お子さんの「伸びしろ」が見えてきます</p>
+      <p style={{ fontSize: 11, color: P.muted, marginBottom: 36, textAlign: "center", lineHeight: 1.6, background: P.accentLight, padding: "8px 16px", borderRadius: 20 }}>🔒 匿名でできます。個人情報の入力は不要です。</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, width: "100%", maxWidth: 360 }}>
+        {[
+          { key: "elementary", emoji: "🌱", title: "学びの土台診断", desc: "小学生・中学生の保護者向け", detail: "そろばん・算数・国語・書道を含む総合診断" },
+          { key: "highschool", emoji: "🎯", title: "高校受験 準備力診断", desc: "中学生の保護者向け", detail: "受験対策の「質」を見える化" },
+        ].map(function(item) { return (
+          <button key={item.key} onClick={function(){onSelect(item.key)}} style={{ background: P.card, border: "1.5px solid " + P.border, borderRadius: 14, padding: "22px 20px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ fontSize: 32, width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center", background: P.accentLight, borderRadius: 12, flexShrink: 0 }}>{item.emoji}</div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: P.text, marginBottom: 2 }}>{item.title}</div>
+                <div style={{ fontSize: 12, color: P.sub, lineHeight: 1.5 }}>{item.desc}</div>
+                <div style={{ fontSize: 11, color: P.muted, marginTop: 2 }}>{item.detail}</div>
+              </div>
+            </div>
+          </button>
+        )})
+      }
+      </div>
+      <div style={{ marginTop: 40, fontSize: 11, color: P.muted, textAlign: "center", lineHeight: 1.6 }}>総合学習教室ブリッジ｜滋賀県彦根市稲枝町</div>
+    </div>
+  );
+}
+
+function QuestionCard({ quiz, index, onAnswer, onBack }) {
+  const [selected, setSelected] = useState(null);
+  const question = quiz.questions[index];
+  const handleSelect = function(i) { setSelected(i); setTimeout(function() { onAnswer(question.options[i].score); setSelected(null); }, 350); };
+  return (
+    <div style={{ minHeight: "100dvh", background: P.bg, display: "flex", flexDirection: "column", paddingTop: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "0 20px", marginBottom: 16 }}>
+        {index > 0 && <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: P.muted, padding: "4px 8px" }}>← 戻る</button>}
+        <div style={{ flex: 1 }} /><div style={{ fontSize: 11, color: P.muted }}>{quiz.title}</div>
+      </div>
+      <ProgressBar current={index} total={quiz.questions.length} />
+      <div style={{ padding: "0 24px", flex: 1 }}>
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: P.text, lineHeight: 1.7, marginBottom: 28 }}>{question.q}</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {question.options.map(function(opt, i) { return (
+            <button key={i} onClick={function(){handleSelect(i)}} style={{ background: selected === i ? P.accentLight : P.card, border: selected === i ? "2px solid " + P.accent : "1.5px solid " + P.border, borderRadius: 12, padding: "16px 18px", cursor: "pointer", textAlign: "left", fontSize: 14, color: P.text, lineHeight: 1.6, transition: "all 0.15s", display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <span style={{ width: 24, height: 24, borderRadius: "50%", border: selected === i ? "2px solid " + P.accent : "2px solid " + P.border, background: selected === i ? P.accent : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12, color: "white", fontWeight: 700, transition: "all 0.15s" }}>{selected === i ? "✓" : ""}</span>
+              {opt.text}
+            </button>
+          )})}
+        </div>
+      </div>
+      <div style={{ padding: "20px 24px", textAlign: "center", fontSize: 11, color: P.muted }}>🔒 回答は記録されません。お気軽にお答えください。</div>
+    </div>
+  );
+}
+
+function ResultCard({ quiz, totalScore, onRestart, onHome }) {
+  const result = quiz.results.find(function(r) { return totalScore >= r.min && totalScore <= r.max; }) || quiz.results[quiz.results.length - 1];
+  const maxScore = quiz.questions.length * 3;
+  const pct = Math.round((totalScore / maxScore) * 100);
+  return (
+    <div style={{ minHeight: "100dvh", background: P.bg, padding: "32px 20px" }}>
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ fontSize: 11, letterSpacing: 3, color: P.accent, marginBottom: 16, fontWeight: 600 }}>診断結果</div>
+        <div style={{ width: 120, height: 120, borderRadius: "50%", background: "conic-gradient(" + P.accent + " " + (pct * 3.6) + "deg, " + P.borderLight + " 0deg)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+          <div style={{ width: 100, height: 100, borderRadius: "50%", background: P.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 32 }}>{result.emoji}</div>
+            <div style={{ fontSize: 11, color: P.muted, marginTop: 2 }}>{totalScore} / {maxScore}</div>
+          </div>
+        </div>
+        <div style={{ display: "inline-block", background: P.accentLight, padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, color: P.accent }}>{result.type}</div>
+      </div>
+      <div style={{ background: P.card, border: "1.5px solid " + P.border, borderRadius: 16, padding: 24, marginBottom: 20, boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: P.text, lineHeight: 1.7, marginBottom: 16, whiteSpace: "pre-line" }}>{result.headline}</h2>
+        <p style={{ fontSize: 14, color: P.sub, lineHeight: 1.9, whiteSpace: "pre-line", marginBottom: 20 }}>{result.body}</p>
+        <div style={{ background: P.accentLight, borderRadius: 12, padding: 18, borderLeft: "4px solid " + P.accent }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: P.accent, marginBottom: 8 }}>ブリッジならこう変わります</div>
+          <p style={{ fontSize: 13, color: P.sub, lineHeight: 1.8, whiteSpace: "pre-line", margin: 0 }}>{result.bridge}</p>
+        </div>
+      </div>
+      <div style={{ background: P.card, border: "1.5px solid " + P.border, borderRadius: 16, padding: 20, marginBottom: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: P.text, marginBottom: 12 }}>おすすめのコース</div>
+        {result.recommend.map(function(r, i) { return (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < result.recommend.length - 1 ? "1px solid " + P.borderLight : "none" }}>
+            <span style={{ width: 24, height: 24, borderRadius: 6, background: P.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: P.accent, fontWeight: 700, flexShrink: 0 }}>{i + 1}</span>
+            <span style={{ fontSize: 13, color: P.sub, lineHeight: 1.5 }}>{r}</span>
+          </div>
+        )})}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+        <a href={CTA_URL} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", background: "linear-gradient(135deg, " + P.accent + ", #D4944E)", color: "white", padding: "16px 24px", borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: "none", boxShadow: "0 4px 16px rgba(193,122,58,0.3)", letterSpacing: 0.5 }}>この結果をもとに無料で相談する →</a>
+        <a href={SITE_URL} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", background: P.card, border: "1.5px solid " + P.border, color: P.sub, padding: "14px 24px", borderRadius: 12, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>ブリッジについてもっと知る</a>
+      </div>
+      <div style={{ background: P.accentLight, borderRadius: 12, padding: 18, textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: P.accent, marginBottom: 6 }}>この診断、お友達にもシェアしませんか？</div>
+        <div style={{ fontSize: 12, color: P.sub, lineHeight: 1.6 }}>同じ悩みを持つ保護者の方にも<br/>きっと役立つはずです</div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 20 }}>
+        <button onClick={onRestart} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: P.muted, textDecoration: "underline" }}>もう一度やり直す</button>
+        <button onClick={onHome} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: P.muted, textDecoration: "underline" }}>トップに戻る</button>
+      </div>
+      <div style={{ textAlign: "center", fontSize: 11, color: P.muted, paddingBottom: 20, lineHeight: 1.6 }}>総合学習教室ブリッジ｜滋賀県彦根市稲枝町<br/>TEL 0749-20-5392（平日14:00〜20:00）</div>
+    </div>
+  );
+}
+
+function App() {
+  const [screen, setScreen] = useState("select");
+  const [quizKey, setQuizKey] = useState(null);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [scores, setScores] = useState([]);
+  const quiz = quizKey ? QUIZZES[quizKey] : null;
+  const handleSelect = function(key) { setQuizKey(key); setCurrentQ(0); setScores([]); setScreen("quiz"); };
+  const handleAnswer = function(score) { const ns = scores.concat([score]); setScores(ns); if (currentQ + 1 < quiz.questions.length) setCurrentQ(currentQ + 1); else setScreen("result"); };
+  const handleBack = function() { if (currentQ > 0) { setCurrentQ(currentQ - 1); setScores(scores.slice(0, -1)); } };
+  const totalScore = scores.reduce(function(a, b) { return a + b; }, 0);
+  if (screen === "select") return React.createElement(QuizSelector, { onSelect: handleSelect });
+  if (screen === "quiz" && quiz) return React.createElement(QuestionCard, { quiz: quiz, index: currentQ, onAnswer: handleAnswer, onBack: handleBack });
+  if (screen === "result" && quiz) return React.createElement(ResultCard, { quiz: quiz, totalScore: totalScore, onRestart: function() { setCurrentQ(0); setScores([]); setScreen("quiz"); }, onHome: function() { setScreen("select"); setQuizKey(null); } });
+  return null;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
