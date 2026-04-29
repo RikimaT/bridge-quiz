@@ -12,6 +12,62 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- アクセス解析（2系統） -->
+<!--   1) GoatCounter: プライバシー重視・Cookie レス・無料の公開ダッシュボード -->
+<!--   2) Private GAS endpoint: 田中先生だけが見られる Google Sheet に詳細ログ -->
+<script>
+window.goatcounter = { no_onload: true };
+// セッション ID（同じ訪問者の遷移を 1 件として数えるため）
+(function(){
+  try {
+    var k = "bridgeQuizSessionId";
+    var sid = sessionStorage.getItem(k);
+    if (!sid) {
+      sid = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+      sessionStorage.setItem(k, sid);
+    }
+    window.__BRIDGE_SID__ = sid;
+  } catch (e) {
+    window.__BRIDGE_SID__ = "no-storage-" + Math.random().toString(36).slice(2, 10);
+  }
+})();
+// ★田中先生がGASをデプロイしたら、ここのURLを差し替えてください
+// （gas-code/Code.gs を Apps Script に貼り付け → Web アプリとしてデプロイ → URL を取得）
+window.BRIDGE_PRIVATE_ENDPOINT = ""; // 例: "https://script.google.com/macros/s/AKfycb.../exec"
+window.bridgeTrack = function(path, title, extra) {
+  // 1) GoatCounter（公開ダッシュボード）
+  try {
+    if (window.goatcounter && typeof window.goatcounter.count === "function") {
+      window.goatcounter.count({ path: path, title: title });
+    }
+  } catch (e) {}
+  // 2) Private GAS（田中先生専用ログ）
+  try {
+    if (!window.BRIDGE_PRIVATE_ENDPOINT) return;
+    var payload = {
+      sid: window.__BRIDGE_SID__,
+      ts: new Date().toISOString(),
+      path: path,
+      title: title,
+      ref: document.referrer || "",
+      lang: navigator.language || "",
+      ua: navigator.userAgent || "",
+      screen: (screen.width || 0) + "x" + (screen.height || 0),
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+      extra: extra || {}
+    };
+    // sendBeacon は優先（ナビゲート中でも届く）
+    var blob = new Blob([JSON.stringify(payload)], { type: "text/plain" });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(window.BRIDGE_PRIVATE_ENDPOINT, blob);
+    } else {
+      fetch(window.BRIDGE_PRIVATE_ENDPOINT, { method: "POST", body: blob, mode: "no-cors", keepalive: true });
+    }
+  } catch (e) {}
+};
+</script>
+<script data-goatcounter="https://bridge-quiz.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Noto Sans JP','Hiragino Sans',sans-serif;background:#FAFAF7;color:#1a1a1a;-webkit-font-smoothing:antialiased}
@@ -392,6 +448,27 @@ function App() {
   const handleAnswer = function(score) { const ns = scores.concat([score]); setScores(ns); if (currentQ + 1 < quiz.questions.length) setCurrentQ(currentQ + 1); else setScreen("result"); };
   const handleBack = function() { if (currentQ > 0) { setCurrentQ(currentQ - 1); setScores(scores.slice(0, -1)); } };
   const totalScore = scores.reduce(function(a, b) { return a + b; }, 0);
+  // 画面遷移ごとに解析イベントを送信
+  useEffect(function() {
+    if (typeof window === "undefined" || !window.bridgeTrack) return;
+    let path = "/";
+    let title = "トップ｜ブリッジ学習診断";
+    let extra = { event: "view" };
+    if (screen === "select") {
+      path = "/"; title = "クイズ選択｜ブリッジ学習診断";
+      extra = { event: "view_top" };
+    } else if (screen === "quiz" && quiz) {
+      path = "/quiz/" + quizKey + "/q" + (currentQ + 1);
+      title = quiz.title + " Q" + (currentQ + 1);
+      extra = { event: "answer", quiz: quizKey, q_num: currentQ + 1, q_total: quiz.questions.length };
+    } else if (screen === "result" && quiz) {
+      const r = quiz.results.find(function(rr) { return totalScore >= rr.min && totalScore <= rr.max; }) || quiz.results[quiz.results.length - 1];
+      path = "/result/" + quizKey + "/" + encodeURIComponent(r.type);
+      title = quiz.title + " 結果: " + r.type;
+      extra = { event: "complete", quiz: quizKey, result_type: r.type, score: totalScore, max_score: quiz.questions.length * 3 };
+    }
+    window.bridgeTrack(path, title, extra);
+  }, [screen, currentQ, quizKey]);
   if (screen === "select") return React.createElement(QuizSelector, { onSelect: handleSelect });
   if (screen === "quiz" && quiz) return React.createElement(QuestionCard, { quiz: quiz, index: currentQ, onAnswer: handleAnswer, onBack: handleBack });
   if (screen === "result" && quiz) return React.createElement(ResultCard, { quiz: quiz, totalScore: totalScore, onRestart: function() { setCurrentQ(0); setScores([]); setScreen("quiz"); }, onHome: function() { setScreen("select"); setQuizKey(null); } });
